@@ -77,7 +77,7 @@ with open(EPIC_TSV, newline='') as tsvfile:
         b = "%s" % random.randint(0,255)
         rgb = ','.join([r,g,b])
 
-        track_line = 'track name=EPIC description="EPIC" graphType="heatmap" color=%s viewLimits=0:1 maxHeightPixels=50:50:50' % rgb
+        track_line = 'track name=EPIC description="EPIC" graphType="bar" color=%s viewLimits=0:1 maxHeightPixels=50:50:50' % rgb
         with open(sorted_bed_file, 'w') as file:
             file.write(track_line + '\n')
 
