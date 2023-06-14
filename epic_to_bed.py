@@ -6,9 +6,13 @@ EPIC_TSV="%s/WE-3687_230602_SampleMethylationProfile.txt"%EPIC_DIR
 OUT_DIR="./out"
 
 def append_bed_line(bed_file, chr, start, end, id, beta_value):
-    line = '\t'.join([chr, start, end, id, beta_value])
-    with open(bed_file, 'a') as file:
-        file.write(line + '\n')
+    try:
+        if float(start) > 0 and float(end) > 0:
+            line = '\t'.join([chr, start, end, id, beta_value])
+            with open(bed_file, 'a') as file:
+                file.write(line + '\n')
+    except:
+        return
 
 with open(EPIC_TSV, newline='') as tsvfile:
     tsvreader = csv.reader(tsvfile, delimiter='\t')
@@ -77,7 +81,7 @@ with open(EPIC_TSV, newline='') as tsvfile:
         b = "%s" % random.randint(0,255)
         rgb = ','.join([r,g,b])
 
-        track_line = 'track name=EPIC description="EPIC" graphType="bar" color=%s viewLimits=0:1 maxHeightPixels=50:50:50' % rgb
+        track_line = 'track name="%s EPIC" description="%s EPIC" graphType="bar" color=%s viewLimits=0:1 maxHeightPixels=50:50:50' % (sample, sample, rgb)
         with open(sorted_bed_file, 'w') as file:
             file.write(track_line + '\n')
 
