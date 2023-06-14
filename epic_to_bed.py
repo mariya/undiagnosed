@@ -5,6 +5,11 @@ EPIC_DIR="../methylation/files/WE-3687_230602_ResultReport"
 EPIC_TSV="%s/WE-3687_230602_SampleMethylationProfile.txt"%EPIC_DIR
 OUT_DIR="./out"
 
+def append_bed_line(bed_file, chr, start, end, id, beta_value):
+    line = '\t'.join([chr, start, end, id, beta_value])
+    with open(bed_file, 'a') as file:
+        file.write(line + '\n')
+
 with open(EPIC_TSV, newline='') as tsvfile:
     tsvreader = csv.reader(tsvfile, delimiter='\t')
 
@@ -30,24 +35,35 @@ with open(EPIC_TSV, newline='') as tsvfile:
     # - MAPINFO (164)
     # - UCSC_CPG_ISLANDS_NAME (174)
 
-    # UCSC_CPG_ISLANDS_NAME - not used right now
-    # Format: chr18:23503197-23504189
-    # or: chr6:6006456-6006810;chr6:6007154-6007564;chr6:6008624-6009364
-
     for row in tsvreader:
         id = row[1]
         chr = row[163]
         pos = row[164]
-        # island = row[174]
+        islands = row[174]
 
         # Loop through all samples
         for sample, beta_col in beta_columns.items():
             bed_file = "%s/%s.unsorted.bed" % (OUT_DIR, sample)
-            line = '\t'.join([chr, pos, pos, id, row[beta_col]])
+            beta_value = row[beta_col]
 
-            with open(bed_file, 'a') as file:
-               file.write(line + '\n')
+            # Discard any rows with invalid beta value
+            try:
+                beta_float = float(beta_value)
+            except:
+                beta_float = -1
 
+            if beta_float >= 0 and beta_float <= 1:
+                # UCSC_CPG_ISLANDS_NAME
+                # If this field is blank, use pos for start and end
+                if islands.strip() == "":
+                    append_bed_line(bed_file, chr, pos, pos, id, beta_value)
+                else:
+                    # Format: chr18:23503197-23504189
+                    # or: chr6:6006456-6006810;chr6:6007154-6007564;chr6:6008624-6009364
+                    islands_list = islands.split(';')
+                    for isle in islands_list:
+                        positions = isle.split(":")[1].split("-")
+                        append_bed_line(bed_file, chr, positions[0], positions[1], id, beta_value)
 
     # Sort all the bedfiles
     print("\n\nSorting BED files...")
